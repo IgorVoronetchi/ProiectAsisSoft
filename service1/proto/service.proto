@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package service;
+
+service ValueEstimationService {
+  rpc GetValueEstimation (ValueEstimationRequest) returns (ValueEstimationResponse);
+}
+
+message ValueEstimationRequest {
+  string name = 1;
+}
+
+message ValueEstimationResponse {
+  string value = 1;
+}

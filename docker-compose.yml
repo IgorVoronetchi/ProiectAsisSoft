@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # Frontend service
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - gateway
+    networks:
+      - app-network
+
+  # API Gateway service
+  gateway:
+    build: ./gateway
+    ports:
+      - "80:3000"  # Map port 80 to 3000 as required
+    depends_on:
+      - auth
+      - service1
+      - service2
+    environment:
+      - AUTH_SERVICE_URL=http://auth:4000
+      - SERVICE1_URL=http://service1:3001
+      - SERVICE2_URL=http://service2:3002
+    networks:
+      - app-network
+
+  # Auth service
+  auth:
+    build: ./auth
+    ports:
+      - "4000:4000"
+    networks:
+      - app-network
+
+  # Microservice 1
+  service1:
+    build: ./service1
+    ports:
+      - "3001:3001"
+    depends_on:
+      - kafka
+    environment:
+      - SERVICE2_URL=http://service2:3002
+      - KAFKA_BROKER=kafka:9092
+    networks:
+      - app-network
+
+  # Microservice 2
+  service2:
+    build: ./service2
+    ports:
+      - "3002:3002"
+    depends_on:
+      - kafka
+    environment:
+      - SERVICE1_URL=http://service1:3001
+      - KAFKA_BROKER=kafka:9092
+    networks:
+      - app-network
+
+  # Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - app-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
