@@ -11,7 +11,7 @@ app.post('/login', (req, res) => {
     const token = jwt.sign({ user }, SECRET, { expiresIn: '1h' });
     return res.json({ token });
   }
-  res.status(401).json({ message: 'Unauthorized' });
+  res.status(401).json({ message: 'Unauthorized' }); //TEST
 });
 
 app.listen(4000, () => console.log('Auth server running on port 4000'));
